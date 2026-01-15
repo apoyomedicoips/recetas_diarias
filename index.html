@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>IPS - Tablero de Recetas Diarias</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- DataTables + Bootstrap 5 -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+
+  <!-- Iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Estilos propios -->
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<div id="login-screen" class="login-screen d-flex align-items-center justify-content-center">
+  <div class="login-card shadow-lg">
+    <div class="text-center mb-3">
+      <img id="login-logo" src="" alt="Logo IPS" class="login-logo mb-2">
+      <h1 class="h4 mb-0">IPS | Apoyo Médico</h1>
+      <p class="text-muted mb-0">Tablero de Recetas y Stock</p>
+    </div>
+    <form id="login-form" autocomplete="off">
+      <div class="mb-3">
+        <label for="login-user" class="form-label">Usuario</label>
+        <input type="text" id="login-user" class="form-control" required>
+      </div>
+      <div class="mb-2">
+        <label for="login-pass" class="form-label">Contraseña</label>
+        <input type="password" id="login-pass" class="form-control" required>
+      </div>
+      <div id="login-error" class="text-danger small mb-2 d-none"></div>
+      <button type="submit" class="btn btn-primary w-100">
+        <span class="me-2"><i class="fa-solid fa-right-to-bracket"></i></span>Ingresar
+      </button>
+    </form>
+    <p class="login-footer text-muted small mt-3 mb-0">
+      Uso interno exclusivo. Acceso monitoreado.
+    </p>
+  </div>
+</div>
+
+<div id="app-shell" class="app-shell d-none">
+
+  <!-- HEADER -->
+  <header class="app-header shadow-sm">
+    <div class="container-fluid d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-3">
+        <img id="header-logo" src="" alt="Logo IPS" class="header-logo">
+        <div>
+          <h1 class="app-title mb-0">Tablero de Recetas y Stock</h1>
+          <p class="app-subtitle mb-0 text-muted">Vigilancia de consumo, quiebres y stock crítico</p>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <div class="text-end">
+          <div class="small text-muted">Usuario conectado</div>
+          <div id="user-name" class="fw-semibold">-</div>
+        </div>
+        <button id="btn-logout" class="btn btn-outline-light btn-sm">
+          <i class="fa-solid fa-right-from-bracket me-1"></i>Salir
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN LAYOUT -->
+  <main class="app-main">
+    <div class="container-fluid h-100">
+      <div class="row h-100">
+
+        <!-- SIDEBAR DE FILTROS -->
+        <aside class="col-12 col-md-3 col-xl-2 app-sidebar border-end">
+          <div class="sidebar-inner">
+            <h2 class="sidebar-title">
+              <i class="fa-solid fa-sliders me-2"></i>Filtros
+            </h2>
+
+            <div class="mb-3">
+              <label class="form-label">Rango de fechas</label>
+              <div class="d-flex flex-column gap-2">
+                <input type="date" id="f-fecha-desde" class="form-control form-control-sm">
+                <input type="date" id="f-fecha-hasta" class="form-control form-control-sm">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="f-farmacia" class="form-label">Farmacia</label>
+              <select id="f-farmacia" class="form-select form-select-sm">
+                <option value="">Todas</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="f-medicamento" class="form-label">Medicamento</label>
+              <select id="f-medicamento" class="form-select form-select-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" id="f-solo-esenciales">
+              <label class="form-check-label" for="f-solo-esenciales">
+                Solo insumos esenciales
+              </label>
+            </div>
+
+            <div class="mb-4">
+              <label for="f-umbral-critico" class="form-label">
+                Umbral stock crítico (días de cobertura)
+              </label>
+              <input type="number" id="f-umbral-critico" class="form-control form-control-sm" min="1" max="60" value="7">
+            </div>
+
+            <div class="d-grid gap-2">
+              <button id="btn-aplicar-filtros" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-filter me-1"></i>Aplicar filtros
+              </button>
+              <button id="btn-reset-filtros" class="btn btn-outline-secondary btn-sm">
+                <i class="fa-solid fa-rotate-left me-1"></i>Reiniciar
+              </button>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="small text-muted">
+              <i class="fa-solid fa-circle-info me-1"></i>
+              Los cálculos se realizan sobre las recetas diarias cargadas en el repositorio
+              <span class="fw-semibold">apoyomedicoips/recetas_diarias</span>.
+            </div>
+          </div>
+        </aside>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <section class="col-12 col-md-9 col-xl-10 app-content">
+          <div class="content-inner">
+
+            <!-- BARRA DE ESTADO -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+              <div class="text-muted small">
+                <span class="me-3"><i class="fa-regular fa-calendar me-1"></i>Periodo: <span id="lbl-periodo">-</span></span>
+                <span><i class="fa-solid fa-database me-1"></i>Fuente: CSVs en GitHub</span>
+              </div>
+              <div id="badge-estado" class="badge bg-success-subtle text-success border border-success-subtle">
+                Listo
+              </div>
+            </div>
+
+            <!-- KPIs -->
+            <div class="row g-3 mb-3">
+              <div class="col-12 col-sm-6 col-xl-3">
+                <div class="kpi-card shadow-sm">
+                  <div class="kpi-icon kpi-icon-primary">
+                    <i class="fa-solid fa-file-prescription"></i>
+                  </div>
+                  <div class="kpi-body">
+                    <div class="kpi-label">Recetas procesadas</div>
+                    <div id="kpi-recetas" class="kpi-value">-</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-sm-6 col-xl-3">
+                <div class="kpi-card shadow-sm">
+                  <div class="kpi-icon kpi-icon-secondary">
+                    <i class="fa-solid fa-pills"></i>
+                  </div>
+                  <div class="kpi-body">
+                    <div class="kpi-label">Unidades dispensadas</div>
+                    <div id="kpi-dispensado" class="kpi-value">-</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-sm-6 col-xl-3">
+                <div class="kpi-card shadow-sm">
+                  <div class="kpi-icon kpi-icon-warning">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                  </div>
+                  <div class="kpi-body">
+                    <div class="kpi-label">Tasa de quiebre</div>
+                    <div id="kpi-quiebre" class="kpi-value">-</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-sm-6 col-xl-3">
+                <div class="kpi-card shadow-sm">
+                  <div class="kpi-icon kpi-icon-danger">
+                    <i class="fa-solid fa-battery-quarter"></i>
+                  </div>
+                  <div class="kpi-body">
+                    <div class="kpi-label">Ítems en stock crítico</div>
+                    <div id="kpi-criticos" class="kpi-value">-</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- GRÁFICOS -->
+            <div class="row g-3 mb-3">
+              <div class="col-12 col-xl-7">
+                <div class="panel-card shadow-sm h-100">
+                  <div class="panel-header">
+                    <h3 class="panel-title">
+                      <i class="fa-solid fa-chart-line me-2"></i>Evolución diaria del consumo
+                    </h3>
+                  </div>
+                  <div class="panel-body">
+                    <canvas id="chart-series"></canvas>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-xl-5">
+                <div class="panel-card shadow-sm h-100">
+                  <div class="panel-header">
+                    <h3 class="panel-title">
+                      <i class="fa-solid fa-ranking-star me-2"></i>Top medicamentos por consumo
+                    </h3>
+                  </div>
+                  <div class="panel-body">
+                    <canvas id="chart-top-meds"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TABLAS -->
+            <div class="row g-3">
+              <div class="col-12 col-xl-6">
+                <div class="panel-card shadow-sm h-100">
+                  <div class="panel-header">
+                    <h3 class="panel-title">
+                      <i class="fa-solid fa-battery-quarter me-2"></i>Stock crítico (ordenado por días de cobertura)
+                    </h3>
+                  </div>
+                  <div class="panel-body">
+                    <div class="table-responsive">
+                      <table id="tbl-stock-critico" class="table table-sm table-striped table-hover align-middle">
+                        <thead>
+                          <tr>
+                            <th>Farmacia</th>
+                            <th>Medicamento</th>
+                            <th>Stock</th>
+                            <th>Consumo diario</th>
+                            <th>Días cob.</th>
+                            <th>Reposición sugerida</th>
+                          </tr>
+                        </thead>
+                        <tbody></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-xl-6">
+                <div class="panel-card shadow-sm h-100">
+                  <div class="panel-header">
+                    <h3 class="panel-title">
+                      <i class="fa-solid fa-triangle-exclamation me-2"></i>Quiebres por farmacia
+                    </h3>
+                  </div>
+                  <div class="panel-body">
+                    <div class="table-responsive">
+                      <table id="tbl-quiebres-farmacia" class="table table-sm table-striped table-hover align-middle">
+                        <thead>
+                          <tr>
+                            <th>Farmacia</th>
+                            <th>Días observados</th>
+                            <th>Recetado</th>
+                            <th>Dispensado</th>
+                            <th>Días con quiebre</th>
+                            <th>Tasa de quiebre</th>
+                            <th>Fill rate global</th>
+                          </tr>
+                        </thead>
+                        <tbody></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- Overlay de carga -->
+    <div id="loading-overlay" class="loading-overlay d-none">
+      <div class="loading-spinner">
+        <div class="spinner-border text-primary" role="status"></div>
+        <div class="mt-2 text-muted small">Actualizando tablero...</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="app-footer border-top">
+    <div class="container-fluid d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div class="small text-muted">
+        <span class="me-2">&copy; <span id="footer-year"></span> Instituto de Previsión Social</span>
+        <span class="text-muted">Departamento de Apoyo Médico</span>
+      </div>
+      <div class="d-flex align-items-center gap-2 small text-muted">
+        <span>Desarrollado con datos abiertos internos</span>
+        <img id="footer-logo" src="" alt="Logo IPS" class="footer-logo">
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- jQuery (para DataTables) -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- DataTables -->
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<!-- Código propio -->
+<script src="assets/app.js"></script>
+</body>
+</html>

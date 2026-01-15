@@ -1,0 +1,408 @@
+/* ============================
+   Variables de tema
+   ============================ */
+:root{
+  --bg-body: #0f172a;
+  --bg-shell: #0b1120;
+  --bg-card: #0f172a;
+  --bg-panel: #020617;
+  --bg-sidebar: #020617;
+
+  --border-subtle: #1f2937;
+
+  --txt-main: #e5e7eb;
+  --txt-muted: #9ca3af;
+  --txt-strong: #f9fafb;
+
+  --primary: #2563eb;
+  --primary-soft: rgba(37, 99, 235, 0.12);
+  --accent: #22c55e;
+  --danger: #ef4444;
+  --warning: #f97316;
+
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.65);
+}
+
+/* ============================
+   Layout general
+   ============================ */
+
+html, body{
+  height:100%;
+}
+
+body{
+  margin:0;
+  padding:0;
+  background: radial-gradient(circle at top left, #1d2435 0%, #020617 52%, #020617 100%);
+  color:var(--txt-main);
+  font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+/* App shell */
+
+.app-shell{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+.app-header{
+  background: linear-gradient(90deg, #020617 0%, #0f172a 45%, #111827 100%);
+  color:var(--txt-main);
+  padding:0.75rem 1.25rem;
+  position:sticky;
+  top:0;
+  z-index:1030;
+}
+
+.header-logo{
+  width:42px;
+  height:42px;
+  border-radius:999px;
+  object-fit:contain;
+  background:#020617;
+  padding:4px;
+  border:1px solid rgba(148,163,184,.4);
+}
+
+.app-title{
+  font-size:1.1rem;
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+  color:var(--txt-strong);
+}
+
+.app-subtitle{
+  font-size:0.8rem;
+  color:var(--txt-muted);
+}
+
+.app-main{
+  flex:1;
+  position:relative;
+}
+
+.app-footer{
+  background:#020617;
+  color:var(--txt-muted);
+  padding:0.5rem 1.25rem;
+}
+
+/* ============================
+   Sidebar de filtros
+   ============================ */
+
+.app-sidebar{
+  background:var(--bg-sidebar);
+  padding:1rem 0.75rem;
+}
+
+.sidebar-inner{
+  position:sticky;
+  top:4.25rem;
+  max-height:calc(100vh - 5rem);
+  overflow-y:auto;
+  padding-right:0.25rem;
+}
+
+.sidebar-title{
+  font-size:0.95rem;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--txt-muted);
+  margin-bottom:0.75rem;
+}
+
+.app-sidebar .form-label{
+  font-size:0.8rem;
+  color:var(--txt-muted);
+}
+
+.app-sidebar .form-control,
+.app-sidebar .form-select{
+  background:#020617;
+  border-color:#1f2937;
+  color:var(--txt-main);
+  font-size:0.82rem;
+}
+
+.app-sidebar .form-control:focus,
+.app-sidebar .form-select:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 1px rgba(37,99,235,.6);
+}
+
+.app-sidebar .form-check-label{
+  font-size:0.82rem;
+}
+
+/* Scrollbar fino en sidebar */
+.sidebar-inner::-webkit-scrollbar{
+  width:6px;
+}
+.sidebar-inner::-webkit-scrollbar-thumb{
+  background:#1f2937;
+  border-radius:999px;
+}
+
+/* ============================
+   Área de contenido
+   ============================ */
+
+.app-content{
+  padding:1rem 0.75rem 1.25rem 0.75rem;
+}
+
+.content-inner{
+  max-width:1200px;
+  margin:0 auto;
+}
+
+/* Barra de estado */
+
+#badge-estado{
+  font-size:0.7rem;
+  padding:0.25rem 0.75rem;
+  border-radius:999px;
+}
+
+/* ============================
+   Tarjetas KPI
+   ============================ */
+
+.kpi-card{
+  display:flex;
+  align-items:center;
+  gap:0.75rem;
+  background:linear-gradient(135deg, rgba(15,23,42,0.95), rgba(15,23,42,0.98));
+  border-radius:var(--radius-lg);
+  padding:0.75rem 0.9rem;
+  border:1px solid rgba(31,41,55,.8);
+  box-shadow:var(--shadow-soft);
+}
+
+.kpi-icon{
+  width:40px;
+  height:40px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1rem;
+}
+
+.kpi-icon-primary{
+  background:rgba(37,99,235,.12);
+  color:#60a5fa;
+}
+.kpi-icon-secondary{
+  background:rgba(129,140,248,.16);
+  color:#a5b4fc;
+}
+.kpi-icon-warning{
+  background:rgba(248,196,113,.16);
+  color:#fbbf24;
+}
+.kpi-icon-danger{
+  background:rgba(248,113,113,.16);
+  color:#f87171;
+}
+
+.kpi-body{
+  flex:1;
+}
+
+.kpi-label{
+  font-size:0.75rem;
+  text-transform:uppercase;
+  letter-spacing:0.06em;
+  color:var(--txt-muted);
+}
+
+.kpi-value{
+  font-size:1.15rem;
+  font-weight:600;
+  color:var(--txt-strong);
+}
+
+/* ============================
+   Paneles
+   ============================ */
+
+.panel-card{
+  background:radial-gradient(circle at top left, rgba(30,64,175,.48) 0%, #020617 52%, #020617 100%);
+  border-radius:var(--radius-lg);
+  border:1px solid rgba(30,64,175,.35);
+  display:flex;
+  flex-direction:column;
+  min-height:260px;
+}
+
+.panel-header{
+  padding:0.65rem 0.9rem;
+  border-bottom:1px solid rgba(31,41,55,.8);
+  background:linear-gradient(90deg, rgba(15,23,42,0.96), rgba(30,64,175,0.35));
+}
+
+.panel-title{
+  font-size:0.9rem;
+  color:var(--txt-strong);
+  margin:0;
+}
+
+.panel-body{
+  padding:0.75rem 0.9rem 0.9rem 0.9rem;
+}
+
+/* Tablas */
+
+.table{
+  color:var(--txt-main);
+}
+
+.table thead{
+  background:rgba(15,23,42,0.9);
+  color:var(--txt-muted);
+  font-size:0.75rem;
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+}
+
+.table tbody tr:hover{
+  background:rgba(15,23,42,0.75);
+}
+
+/* DataTables ajustes */
+
+.dataTables_wrapper .dataTables_length select,
+.dataTables_wrapper .dataTables_filter input{
+  background:#020617;
+  border-color:#1f2937;
+  color:var(--txt-main);
+  font-size:0.8rem;
+}
+
+.dataTables_wrapper .dataTables_info{
+  color:var(--txt-muted);
+  font-size:0.75rem;
+}
+
+.dataTables_wrapper .dataTables_paginate .pagination .page-link{
+  background:#020617;
+  border-color:#1f2937;
+  color:var(--txt-main);
+  font-size:0.8rem;
+}
+.dataTables_wrapper .dataTables_paginate .pagination .page-link:hover{
+  background:#111827;
+}
+.dataTables_wrapper .dataTables_paginate .pagination .page-item.active .page-link{
+  background:var(--primary);
+}
+
+/* ============================
+   Login
+   ============================ */
+
+.login-screen{
+  position:fixed;
+  inset:0;
+  background:radial-gradient(circle at top left, #1d2435 0%, #020617 52%, #020617 100%);
+  z-index:2000;
+}
+
+.login-card{
+  background:rgba(15,23,42,0.96);
+  border-radius:24px;
+  padding:1.75rem 1.75rem 1.25rem 1.75rem;
+  border:1px solid rgba(37,99,235,0.45);
+  max-width:360px;
+  width:100%;
+  color:var(--txt-main);
+}
+
+.login-logo{
+  width:64px;
+  height:64px;
+  border-radius:999px;
+  object-fit:contain;
+  background:#020617;
+  padding:6px;
+  border:1px solid rgba(148,163,184,.4);
+}
+
+.login-card .form-label{
+  font-size:0.8rem;
+  color:var(--txt-muted);
+}
+
+.login-card .form-control{
+  background:#020617;
+  border-color:#1f2937;
+  color:var(--txt-main);
+  font-size:0.9rem;
+}
+
+.login-card .form-control:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 1px rgba(37,99,235,.6);
+}
+
+.login-footer{
+  border-top:1px dashed rgba(55,65,81,.7);
+  padding-top:0.75rem;
+}
+
+/* ============================
+   Loading overlay
+   ============================ */
+
+.loading-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,0.7);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:1500;
+}
+
+.loading-spinner{
+  background:#020617;
+  padding:1rem 1.25rem;
+  border-radius:16px;
+  border:1px solid rgba(31,41,55,.8);
+}
+
+/* ============================
+   Logos footer
+   ============================ */
+
+.footer-logo{
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  object-fit:contain;
+  background:#020617;
+  padding:2px;
+  border:1px solid rgba(148,163,184,.4);
+}
+
+/* ============================
+   Responsivo
+   ============================ */
+
+@media (max-width: 767.98px){
+  .app-sidebar{
+    border-right:none !important;
+    border-bottom:1px solid var(--border-subtle) !important;
+    margin-bottom:0.5rem;
+  }
+  .sidebar-inner{
+    position:static;
+    max-height:none;
+  }
+}

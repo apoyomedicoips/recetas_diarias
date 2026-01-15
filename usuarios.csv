@@ -1,3 +1,3 @@
-usuario,clave
-"dbmeza","123"
-"clawes","123"
+usuario,correo,clave,nombre,rol
+dbmeza,dbmeza@gmail.com,314163,Diego Bernardo Meza,admin
+demo,demo@example.com,demo123,Usuario de prueba,viewer
