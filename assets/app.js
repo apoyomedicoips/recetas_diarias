@@ -1,6 +1,6 @@
 // Configuración general del frontend
 const CONFIG = {
-  GAS_ENDPOINT: "https://script.google.com/macros/s/AKfycbyR28-CFzk6C5ZW1lNWlxsPbV5XIetOgZYxrHbFh8bgHG8TEixpIH2JmAU15omcgbp_2w/exec",
+  GAS_ENDPOINT: "https://script.google.com/macros/s/AKfycbzxbKs3wCburHcplq5RuPVm7Z3pKvdsZz0ds0jSY193sR5oVwQLfBR-dyZV70S_ch__xw/exec",
   // "https://script.google.com/macros/s/AKfycbzbWhEiCIE5uZ6UIbVWtAJRygfp9JnQHklJMtaUBThq6jtyajhMma2Y9xxiBZYJh02VwQ/exec"
   LOGO_URL: "https://i.postimg.cc/nLMVw5hz/logo-IPS.jpg", // sustituir por URL real del logo
   UMBRAL_CRITICO_DEFAULT: 7
