@@ -1,6 +1,6 @@
 /**
  * Backend para tablero de recetas diarias.
- * Lee archivos CSV publicados en el repositorio público:
+ * Lee archivos CSV/TXT publicados en el repositorio público:
  *   https://github.com/apoyomedicoips/recetas_diarias
  *
  * Exponer como Web App:
@@ -10,10 +10,14 @@
 
 const CONFIG = {
   REPO_RAW_BASE: "https://raw.githubusercontent.com/apoyomedicoips/recetas_diarias/main/",
-  FILE_RECETAS: "recetas_por_mes_anio_medicamento.csv",
   FILE_ALMACENES: "almacenes_farmacias_codigos.csv",
   FILE_MEDICAMENTOS: "descripcionycodigomedicacmentoSAP.csv",
   FILE_USUARIOS: "usuarios.csv",
+  // particiones de recetas SOLO esenciales 2025 en GitHub
+  RECETAS_PART_PREFIX: "recetas_por_mes_anio_medicamento_soloesenciales_2025_",
+  RECETAS_PART_SUFFIX: ".txt",
+  RECETAS_PART_MIN: 1,
+  RECETAS_PART_MAX: 12,
   CACHE_SECONDS: 30 * 60
 };
 
@@ -36,7 +40,7 @@ function doGet(e){
       payload = { ok:true, action:"ping", message:"API recetas_diarias activa" };
     }
   } catch(err){
-    payload = { ok:false, error:err.toString(), stack:String(err.stack || "") };
+    payload = { ok:false, error:String(err), stack:String(err.stack || "") };
   }
 
   return ContentService
@@ -44,8 +48,11 @@ function doGet(e){
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-// ======================= Lectura y cacheo de CSV =======================
+// ======================= Lectura y cacheo de CSV/TXT desde GitHub =======================
 
+/**
+ * Descarga un archivo de texto (CSV/TXT) desde GitHub RAW y lo cachea.
+ */
 function fetchCsvText(fileName){
   const cache = CacheService.getScriptCache();
   const key = "csv_" + fileName;
@@ -58,13 +65,17 @@ function fetchCsvText(fileName){
   const res = UrlFetchApp.fetch(url, { muteHttpExceptions:true });
   const code = res.getResponseCode();
   if(code !== 200){
-    throw new Error("No se pudo leer " + fileName + " (" + code + ")");
+    throw new Error("No se pudo leer " + fileName + " (HTTP " + code + ")");
   }
   txt = res.getContentText("UTF-8");
   cache.put(key, txt, CONFIG.CACHE_SECONDS);
   return txt;
 }
 
+/**
+ * Convierte un CSV en arreglo de objetos {columna: valor}.
+ * Usa la primera fila como encabezados.
+ */
 function parseCsv(text){
   const rows = Utilities.parseCsv(text);
   if(!rows || rows.length === 0){
@@ -105,9 +116,30 @@ function getMedicamentos(){
   return parseCsv(txt);
 }
 
+/**
+ * Concatena las particiones de recetas:
+ *   recetas_por_mes_anio_medicamento_soloesenciales_2025_1.txt
+ *   ...
+ *   recetas_por_mes_anio_medicamento_soloesenciales_2025_12.txt
+ */
 function getRecetas(){
-  const txt = fetchCsvText(CONFIG.FILE_RECETAS);
-  return parseCsv(txt);
+  var all = [];
+
+  for(var k = CONFIG.RECETAS_PART_MIN; k <= CONFIG.RECETAS_PART_MAX; k++){
+    var fname = CONFIG.RECETAS_PART_PREFIX + String(k) + CONFIG.RECETAS_PART_SUFFIX;
+    try{
+      var txt = fetchCsvText(fname);
+      var arr = parseCsv(txt);
+      if(arr && arr.length){
+        Array.prototype.push.apply(all, arr);
+      }
+    } catch(e){
+      // Si algún archivo no existe u otro error, se ignora esa partición
+      Logger.log("No se pudo leer " + fname + ": " + e);
+    }
+  }
+
+  return all;
 }
 
 // ======================= API: login =======================
@@ -124,7 +156,8 @@ function apiLogin(params){
   var match = null;
   for(var i=0; i<usuarios.length; i++){
     var u = usuarios[i];
-    if(String(u.usuario || "").trim() === usuario && String(u.clave || "").trim() === clave){
+    if(String(u.usuario || "").trim() === usuario &&
+       String(u.clave   || "").trim() === clave){
       match = u;
       break;
     }
@@ -340,16 +373,15 @@ function apiSummary(params){
     }
     g._fechas[fechaKey].rec += qtyRec;
     g._fechas[fechaKey].disp += qtyDisp;
-    g._fechas[fechaKey].stock = stock; // se queda con el último valor del día
+    g._fechas[fechaKey].stock = stock;
 
-    // Actualizar último stock y fecha
     if(!g.fechaUltima || fecha.getTime() > g.fechaUltima.getTime()){
       g.fechaUltima = fecha;
       g.stockUltimo = stock;
     }
   });
 
-  // Procesar quiebres por farmacia y globales
+  // Procesar quiebres
   Object.keys(porFarm).forEach(function(fCode){
     var pf = porFarm[fCode];
     var fechas = Object.keys(pf._fechas);
@@ -385,7 +417,7 @@ function apiSummary(params){
     serie.dispensado.push(porDia[d].disp);
   });
 
-  // Top medicamentos por consumo (sumado en todo el periodo filtrado)
+  // Top medicamentos
   var porMed = {};
   Object.keys(porFarmMed).forEach(function(keyFM){
     var g = porFarmMed[keyFM];
@@ -405,7 +437,7 @@ function apiSummary(params){
     return (b.dispensado||0) - (a.dispensado||0);
   }).slice(0, 10);
 
-  // Stock crítico aproximado: cobertura = stockUltimo / consumoDiarioMedio
+  // Stock crítico
   var itemsCriticos = 0;
   var stockCritico = [];
   Object.keys(porFarmMed).forEach(function(keyFM){
@@ -437,16 +469,16 @@ function apiSummary(params){
   });
   stockCritico = stockCritico.slice(0, 50);
 
-  // Quiebres por farmacia en arreglo ordenado
   var quiebresFarmacia = Object.keys(porFarm).map(function(fCode){
+    var pf = porFarm[fCode];
     return {
-      farmacia: porFarm[fCode].farmacia,
-      dias_observados: porFarm[fCode].dias_observados,
-      recetado: porFarm[fCode].recetado,
-      dispensado: porFarm[fCode].dispensado,
-      quiebres: porFarm[fCode].quiebres,
-      tasa_quiebre: porFarm[fCode].tasa_quiebre,
-      fill_rate_global: porFarm[fCode].fill_rate_global
+      farmacia: pf.farmacia,
+      dias_observados: pf.dias_observados,
+      recetado: pf.recetado,
+      dispensado: pf.dispensado,
+      quiebres: pf.quiebres,
+      tasa_quiebre: pf.tasa_quiebre,
+      fill_rate_global: pf.fill_rate_global
     };
   }).sort(function(a,b){
     return (b.tasa_quiebre || 0) - (a.tasa_quiebre || 0);
@@ -477,13 +509,12 @@ function parseFecha(str){
   if(!str){ return null; }
   var s = String(str).trim();
   if(!s){ return null; }
-  // Se asume formato ISO o similar (YYYY-MM-DD)
   var parts = s.split(/[T ]/)[0].split("-");
   if(parts.length !== 3){ return null; }
   var y = Number(parts[0]);
   var m = Number(parts[1]) - 1;
   var d = Number(parts[2]);
-  if(!y || !m && m !== 0 || !d){
+  if(!y || (!m && m !== 0) || !d){
     return null;
   }
   return new Date(y, m, d);
