@@ -1,6 +1,6 @@
 // Configuración general del frontend
 const CONFIG = {
-  GAS_ENDPOINT: "https://script.google.com/macros/s/REEMPLAZAR_CON_ID/exec",
+  GAS_ENDPOINT: "https://script.google.com/macros/s/AKfycbxPVxWTyZMgNQMJxTMpRQKhraAHbWoVdvlIhHLjgSniCzc1lZne0B7JwBwdU-KCIJ32BQ/exec",
   LOGO_URL: "https://i.postimg.cc/REEMPLAZAR_RUTA/logo-ips.png", // sustituir por URL real del logo
   UMBRAL_CRITICO_DEFAULT: 7
 };
